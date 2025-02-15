@@ -77,16 +77,55 @@ static int net_device_close(struct net_device *dev) {
 
 int net_device_output(struct net_device *dev, uint16_t type,
                       const uint8_t *data, size_t len, const void *dst) {
+    if (!NET_DEVICE_IS_UP(dev)) {
+        errorf("not linkup, dev=%s", dev->name);
+        return -1;
+    }
+
+    if (len > dev->mtu) {
+        errorf("too large, dev=%s, mtu=%u, len=%zu", dev->name, dev->mtu, len);
+        return -1;
+    }
+
+    debugf("dev=%s, type=0x%04x, len=%zu", dev->name, type, len);
+    debugdump(data, len);
+
+    if (dev->ops->transmit(dev, type, data, len, dst) == -1) {
+        errorf("device transmit failure, dev=%s, len=%zu", dev->name, len);
+        return -1;
+    }
+
     return 0;
 }
 
 int net_input_handler(uint16_t type, const uint8_t *data, size_t len,
                       struct net_device *dev) {
+    debugf("dev=%s, type=0x%04x, len=%zu", dev->name, type, len);
+    debugdump(data, len);
+
     return 0;
 }
 
-int net_run(void) { return 0; }
+int net_run(void) {
+    debugf("open all devices...");
+    for (struct net_device *dev = devices; dev; dev = dev->next)
+        net_device_open(dev);
 
-void net_shutdown(void) {}
+    debugf("running...");
 
-int net_init(void) { return 0; }
+    return 0;
+}
+
+void net_shutdown(void) {
+    debugf("close all devices...");
+    for (struct net_device *dev = devices; dev; dev = dev->next)
+        net_device_close(dev);
+
+    debugf("shutdown");
+}
+
+int net_init(void) {
+    infof("initialized");
+
+    return 0;
+}
