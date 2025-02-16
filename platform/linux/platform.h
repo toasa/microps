@@ -3,7 +3,6 @@
 
 #include <pthread.h>
 #include <signal.h>
-#include <stddef.h>
 #include <stdlib.h>
 
 /*

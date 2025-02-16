@@ -1,7 +1,3 @@
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-
 #include "net.h"
 #include "platform.h"
 #include "util.h"

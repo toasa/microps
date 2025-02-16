@@ -1,10 +1,5 @@
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-
-#include "platform.h"
-
 #include "net.h"
+#include "platform.h"
 #include "util.h"
 
 // NOTE: If you want to add/delete the entries after net_run(),

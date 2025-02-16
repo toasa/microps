@@ -1,12 +1,9 @@
 #include <signal.h>
-#include <stdio.h>
-
-#include "net.h"
-#include "util.h"
 
 #include "driver/dummy.h"
-
+#include "net.h"
 #include "test.h"
+#include "util.h"
 
 static volatile sig_atomic_t terminate;
 
