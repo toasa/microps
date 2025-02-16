@@ -144,12 +144,10 @@ void *queue_peek(struct queue_head *queue) {
 
 void queue_foreach(struct queue_head *queue,
                    void (*func)(void *arg, void *data), void *arg) {
-    struct queue_entry *entry;
-
     if (!queue || !func)
         return;
 
-    for (entry = queue->head; entry; entry = entry->next)
+    for (struct queue_entry *entry = queue->head; entry; entry = entry->next)
         func(arg, entry->data);
 }
 
