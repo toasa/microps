@@ -45,6 +45,7 @@ static inline int mutex_unlock(mutex_t *mutex) {
 // Linux では SIGRTMIN~SIGRTMAX (34~64) のシグナルを、アプリが自由に使っていい。
 // SIGRTMIN は glibc が内部的に使用しているため、+1 から使う。
 #define INTR_IRQ_BASE (SIGRTMIN+1)
+
 #define INTR_IRQ_SHARED 0x0001
 
 extern int intr_register_irq(unsigned int irq,
