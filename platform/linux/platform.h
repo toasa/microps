@@ -2,6 +2,7 @@
 #define PLATFORM_H
 
 #include <pthread.h>
+#include <signal.h>
 #include <stddef.h>
 #include <stdlib.h>
 
@@ -36,5 +37,23 @@ static inline int mutex_lock(mutex_t *mutex) {
 static inline int mutex_unlock(mutex_t *mutex) {
     return pthread_mutex_unlock(mutex);
 }
+
+/*
+ * Interrupt
+ */
+
+// Linux では SIGRTMIN~SIGRTMAX (34~64) のシグナルを、アプリが自由に使っていい。
+// SIGRTMIN は glibc が内部的に使用しているため、+1 から使う。
+#define INTR_IRQ_BASE (SIGRTMIN+1)
+#define INTR_IRQ_SHARED 0x0001
+
+extern int intr_register_irq(unsigned int irq,
+                             int (*handler)(unsigned int irq, void *id),
+                             int flags, const char *name, void *dev);
+extern int intr_raise_irq(unsigned int irq);
+
+extern int intr_run(void);
+extern void intr_shutdown(void);
+extern int intr_init(void);
 
 #endif
