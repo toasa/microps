@@ -47,9 +47,9 @@ static inline int mutex_unlock(mutex_t *mutex) {
 
 #define INTR_IRQ_SHARED 0x0001
 
-extern int intr_register_irq(unsigned int irq,
-                             int (*handler)(unsigned int irq, void *id),
-                             int flags, const char *name, void *dev);
+typedef int (*irq_handler_t)(unsigned int irq, void *id);
+extern int intr_register_irq(unsigned int irq, irq_handler_t handler, int flags,
+                             const char *name, void *dev);
 extern int intr_raise_irq(unsigned int irq);
 
 extern int intr_run(void);

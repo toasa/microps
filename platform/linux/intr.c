@@ -6,7 +6,7 @@
 struct irq_entry {
     struct irq_entry *next;
     unsigned int irq;
-    int (*handler)(unsigned int irq, void *dev);
+    irq_handler_t handler;
     int flags;
     char name[16];
     void *dev;
@@ -21,8 +21,7 @@ static sigset_t sigmask;
 static pthread_t tid;
 static pthread_barrier_t barrier;
 
-int intr_register_irq(unsigned int irq,
-                      int (*handler)(unsigned int irq, void *dev), int flags,
+int intr_register_irq(unsigned int irq, irq_handler_t handler, int flags,
                       const char *name, void *dev) {
     debugf("irq=%u, flags=%d, name=%s", irq, flags, name);
 

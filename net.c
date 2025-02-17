@@ -9,7 +9,7 @@ struct net_protocol {
     struct net_protocol *next;
     uint16_t type;
     struct queue input_queue;
-    void (*handler)(const uint8_t *data, size_t len, struct net_device *dev);
+    protocol_handler_t handler;
 };
 
 struct net_protocol_queue_entry {
@@ -111,9 +111,7 @@ int net_device_output(struct net_device *dev, uint16_t type,
 }
 
 // NOTE: Must not be call after net_run()
-int net_protocol_register(uint16_t type,
-                          void (*handler)(const uint8_t *data, size_t len,
-                                          struct net_device *dev)) {
+int net_protocol_register(uint16_t type, protocol_handler_t handler) {
     struct net_protocol *proto;
     for (proto = protocols; proto; proto = proto->next) {
         if (type == proto->type) {
