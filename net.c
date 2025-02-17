@@ -159,11 +159,35 @@ int net_input_handler(uint16_t type, const uint8_t *data, size_t len,
                    proto->input_queue.len, dev->name, type, len);
             debugdump(data, len);
 
+            intr_raise_irq(INTR_IRQ_SOFTIRQ);
+
             return 0;
         }
     }
 
     warnf("unsupported protocol type=0x%04x", type);
+
+    return 0;
+}
+
+int net_softirq_handler(void) {
+    for (struct net_protocol *proto = protocols; proto; proto = proto->next) {
+        while (1) {
+            struct net_protocol_queue_entry *entry =
+                queue_pop(&proto->input_queue);
+            if (!entry)
+                break;
+
+            debugf("queue poped (num:%u), dev=%s, type=0x%04x, len=%zu",
+                   proto->input_queue.len, entry->dev->name, proto->type,
+                   entry->len);
+            debugdump(entry->data, entry->len);
+
+            proto->handler(entry->data, entry->len, entry->dev);
+
+            memory_free(entry);
+        }
+    }
 
     return 0;
 }
