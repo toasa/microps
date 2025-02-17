@@ -76,7 +76,7 @@ struct queue_entry;
 struct queue_head {
     struct queue_entry *head;
     struct queue_entry *tail;
-    unsigned int num;
+    unsigned int len;
 };
 
 extern void queue_init(struct queue_head *queue);

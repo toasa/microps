@@ -86,7 +86,7 @@ struct queue_entry {
 void queue_init(struct queue_head *queue) {
     queue->head = NULL;
     queue->tail = NULL;
-    queue->num = 0;
+    queue->len = 0;
 }
 
 void *queue_push(struct queue_head *queue, void *data) {
@@ -109,7 +109,7 @@ void *queue_push(struct queue_head *queue, void *data) {
     if (!queue->head)
         queue->head = entry;
 
-    queue->num++;
+    queue->len++;
 
     return data;
 }
@@ -126,7 +126,7 @@ void *queue_pop(struct queue_head *queue) {
     if (!queue->head)
         queue->tail = NULL;
 
-    queue->num--;
+    queue->len--;
     data = entry->data;
     memory_free(entry);
     return data;
