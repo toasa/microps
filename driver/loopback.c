@@ -25,27 +25,27 @@ struct loopback_queue_entry {
 static int loopback_transmit(struct net_device *dev, uint16_t type,
                              const uint8_t *data, size_t len, const void *dst) {
     mutex_lock(&PRIV(dev)->mutex);
+    {
+        if (PRIV(dev)->queue.len >= LOOPBACK_QUEUE_LIMIT) {
+            mutex_unlock(&PRIV(dev)->mutex);
+            errorf("queue is full.");
+            return -1;
+        }
 
-    if (PRIV(dev)->queue.len >= LOOPBACK_QUEUE_LIMIT) {
-        mutex_unlock(&PRIV(dev)->mutex);
-        errorf("queue is full.");
-        return -1;
+        struct loopback_queue_entry *entry =
+            memory_alloc(sizeof(struct loopback_queue_entry) + len);
+        if (!entry) {
+            mutex_unlock(&PRIV(dev)->mutex);
+            errorf("memory_alloc() failure");
+            return -1;
+        }
+
+        entry->type = type;
+        entry->len = len;
+        memcpy(entry->data, data, len);
+
+        queue_push(&PRIV(dev)->queue, entry);
     }
-
-    struct loopback_queue_entry *entry =
-        memory_alloc(sizeof(struct loopback_queue_entry) + len);
-    if (!entry) {
-        mutex_unlock(&PRIV(dev)->mutex);
-        errorf("memory_alloc() failure");
-        return -1;
-    }
-
-    entry->type = type;
-    entry->len = len;
-    memcpy(entry->data, data, len);
-
-    queue_push(&PRIV(dev)->queue, entry);
-
     mutex_unlock(&PRIV(dev)->mutex);
 
     debugf("queue pushed (num: %u), dev=%s, type=0x%04x, len=%zd",
