@@ -1,5 +1,5 @@
-#ifndef IFNAMSIZ
-#define IFNAMSIZ 16
+#ifndef NET_H
+#define NET_H
 
 #include <stddef.h>
 #include <stdint.h>
