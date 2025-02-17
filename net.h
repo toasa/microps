@@ -53,6 +53,7 @@ extern int net_device_register(struct net_device *dev);
 extern int net_device_output(struct net_device *dev, uint16_t type,
                              const uint8_t *data, size_t len, const void *dst);
 
+// デバイスが受信したパケットを適切なプロトコルスタックへ渡す
 extern int net_input_handler(uint16_t type, const uint8_t *data, size_t len,
                              struct net_device *dev);
 
