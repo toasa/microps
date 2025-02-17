@@ -73,17 +73,17 @@ extern void hexdump(FILE *fp, const void *data, size_t size);
 
 struct queue_entry;
 
-struct queue_head {
+struct queue {
     struct queue_entry *head;
     struct queue_entry *tail;
     unsigned int len;
 };
 
-extern void queue_init(struct queue_head *queue);
-extern void *queue_push(struct queue_head *queue, void *data);
-extern void *queue_pop(struct queue_head *queue);
-extern void *queue_peek(struct queue_head *queue);
-extern void queue_foreach(struct queue_head *queue,
+extern void queue_init(struct queue *queue);
+extern void *queue_push(struct queue *queue, void *data);
+extern void *queue_pop(struct queue *queue);
+extern void *queue_peek(struct queue *queue);
+extern void queue_foreach(struct queue *queue,
                           void (*func)(void *arg, void *data), void *arg);
 
 /*

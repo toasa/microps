@@ -13,7 +13,7 @@
 struct loopback {
     int irq;
     mutex_t mutex;
-    struct queue_head queue;
+    struct queue queue;
 };
 
 struct loopback_queue_entry {
