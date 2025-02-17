@@ -209,9 +209,7 @@ uint32_t ntoh32(uint32_t n) {
  */
 
 uint16_t cksum16(uint16_t *addr, uint16_t count, uint32_t init) {
-    uint32_t sum;
-
-    sum = init;
+    uint32_t sum = init;
     while (count > 1) {
         sum += *(addr++);
         count -= 2;
