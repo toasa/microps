@@ -87,6 +87,36 @@ static int net_device_close(struct net_device *dev) {
     return 0;
 }
 
+// NOTE: Must not be call after net_run().
+int net_device_add_iface(struct net_device *dev, struct net_iface *iface) {
+    for (struct net_iface *i = dev->ifaces; i; i = i->next) {
+        if (i->family == iface->family) {
+            // NOTE: For simplicity, only one iface can be added per family.
+            errorf("already exists, dev=%s, family=%d", dev->name, i->family);
+            return -1;
+        }
+    }
+
+    iface->dev = dev;
+    if (dev->ifaces == NULL) {
+        dev->ifaces = iface;
+    } else  {
+        iface->next = dev->ifaces->next;
+        dev->ifaces->next = iface;
+    }
+
+    return 0;
+}
+
+struct net_iface *net_device_get_iface(struct net_device *dev, int family) {
+    for (struct net_iface *i = dev->ifaces; i; i = i->next) {
+        if (i->family == family)
+            return i;
+    }
+
+    return NULL;
+}
+
 int net_device_output(struct net_device *dev, uint16_t type,
                       const uint8_t *data, size_t len, const void *dst) {
     if (!NET_DEVICE_IS_UP(dev)) {
