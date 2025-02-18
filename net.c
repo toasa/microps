@@ -99,12 +99,8 @@ int net_device_add_iface(struct net_device *dev, struct net_iface *iface) {
     }
 
     iface->dev = dev;
-    if (dev->ifaces == NULL) {
-        dev->ifaces = iface;
-    } else  {
-        iface->next = dev->ifaces->next;
-        dev->ifaces->next = iface;
-    }
+    iface->next = dev->ifaces;
+    dev->ifaces = iface;
 
     return 0;
 }

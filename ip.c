@@ -130,12 +130,8 @@ int ip_iface_register(struct net_device *dev, struct ip_iface *iface) {
         return -1;
     }
 
-    if (ifaces == NULL) {
-        ifaces = iface;
-    } else {
-        iface->next = ifaces->next;
-        ifaces = iface;
-    }
+    iface->next = ifaces;
+    ifaces = iface;
 
     char addr1[IP_ADDR_STR_LEN];
     char addr2[IP_ADDR_STR_LEN];
