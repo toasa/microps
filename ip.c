@@ -185,13 +185,14 @@ static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
     }
 
     struct ip_hdr *hdr = (struct ip_hdr *)data;
+    size_t hdr_len = IPV4_HEADER_LEN(hdr);
     uint16_t total = ntoh16(hdr->total);
 
     if (IPV4_VERSION(hdr) != IP_VERSION_IPV4) {
         errorf("only support IPv4");
         return;
     }
-    if (len < IPV4_HEADER_LEN(hdr)) {
+    if (len < hdr_len) {
         errorf("too short IP header");
         return;
     }
@@ -222,7 +223,8 @@ static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
 
     for (struct ip_protocol *p = protocols; p; p = p->next) {
         if (p->type == hdr->proto) {
-            p->handler(data+IPV4_HEADER_LEN(hdr), total-IPV4_HEADER_LEN(hdr), hdr->src, hdr->dst, iface);
+            p->handler(data + hdr_len, total - hdr_len, hdr->src, hdr->dst,
+                       iface);
             return;
         }
     }
