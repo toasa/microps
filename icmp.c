@@ -1,8 +1,10 @@
-#include <stdint.h>
+#include <string.h>
 
 #include "icmp.h"
 #include "ip.h"
 #include "util.h"
+
+#define ICMP_BUFSIZ IP_PAYLOAD_SIZE_MAX
 
 struct icmp_hdr {
     uint8_t type;
@@ -92,6 +94,41 @@ void icmp_input(const uint8_t *data, size_t len, ip_addr_t src, ip_addr_t dst,
     debugf("%s => %s, len=%zu", ip_addr_ntop(src, addr1, sizeof(addr1)),
            ip_addr_ntop(dst, addr2, sizeof(addr2)), len);
     icmp_dump(data, len);
+
+    struct icmp_hdr *hdr = (struct icmp_hdr *)data;
+    switch (hdr->type) {
+    case ICMP_TYPE_ECHO:
+        // Responds with the address of the received interface.
+        icmp_output(ICMP_TYPE_ECHO_REPLY, hdr->code, hdr->vals,
+                    data + ICMP_HDR_SIZE, len - ICMP_HDR_SIZE, iface->unicast,
+                    src);
+        break;
+    default:
+        // Ignore.
+    }
+}
+
+int icmp_output(uint8_t type, uint8_t code, uint32_t vals, const uint8_t *data,
+                size_t len, ip_addr_t src, ip_addr_t dst) {
+    uint8_t buf[ICMP_BUFSIZ];
+
+    struct icmp_hdr *hdr = (struct icmp_hdr *)buf;
+    hdr->type = type;
+    hdr->code = code;
+    hdr->cksum = 0; // Set 0 for checksum calculation.
+    hdr->vals = vals;
+    memcpy(buf + ICMP_HDR_SIZE, data, len); // Fill the payload.
+
+    size_t msg_len = len + ICMP_HDR_SIZE;
+    hdr->cksum = cksum16((uint16_t *)buf, msg_len, 0);
+
+    char addr1[IP_ADDR_STR_LEN];
+    char addr2[IP_ADDR_STR_LEN];
+    debugf("%s => %s, len=%zu", ip_addr_ntop(src, addr1, sizeof(addr1)),
+           ip_addr_ntop(dst, addr2, sizeof(addr2)), msg_len);
+    icmp_dump(buf, msg_len);
+
+    return ip_output(IP_PROTOCOL_ICMP, buf, msg_len, src, dst);
 }
 
 int icmp_init(void) {
