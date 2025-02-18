@@ -77,8 +77,8 @@ static void ip_dump(const uint8_t *data, size_t len) {
     uint16_t offset = ntoh16(hdr->offset);
     char addr[IP_ADDR_STR_LEN];
 
-    fprintf(stderr, "        vhl: 0x%02x [v: %u, hlen: %u]\n", hdr->vhl,
-            IPV4_VERSION(hdr), IPV4_HEADER_LEN(hdr));
+    fprintf(stderr, "        vhl: 0x%02x [v: %u, ihl: %u(%uB)]\n", hdr->vhl,
+            IPV4_VERSION(hdr), IPV4_IHL(hdr), IPV4_HEADER_LEN(hdr));
     fprintf(stderr, "        tos: 0x%02x\n", hdr->tos);
     fprintf(stderr, "      total: %u (payload: %u)\n", total,
             total - IPV4_HEADER_LEN(hdr));
