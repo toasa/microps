@@ -8,6 +8,10 @@
 #include "platform.h"
 #include "util.h"
 
+#define IPV4_VERSION(hdr) ((hdr->vhl & 0xf0) >> 4)
+#define IPV4_IHL(hdr) (hdr->vhl & 0x0f)
+#define IPV4_HEADER_LEN(hdr) (IPV4_IHL(hdr) << 2)
+
 struct ip_hdr {
     uint8_t vhl;     /* Version / Header length */
     uint8_t tos;     /* Type of service */
@@ -24,9 +28,11 @@ struct ip_hdr {
     uint8_t options[];
 };
 
-#define IPV4_VERSION(hdr) ((hdr->vhl & 0xf0) >> 4)
-#define IPV4_IHL(hdr) (hdr->vhl & 0x0f)
-#define IPV4_HEADER_LEN(hdr) (IPV4_IHL(hdr) << 2)
+struct ip_protocol {
+    struct ip_protocol *next;
+    uint8_t type;
+    ip_proto_handler_t handler;
+};
 
 const ip_addr_t IP_ADDR_ANY = 0x00000000;       /* 0.0.0.0 */
 const ip_addr_t IP_ADDR_BROADCAST = 0xffffffff; /* 255.255.255.255 */
@@ -34,6 +40,7 @@ const ip_addr_t IP_ADDR_BROADCAST = 0xffffffff; /* 255.255.255.255 */
 // NOTE: If you want to add/delete the entries after net_run(), you need to
 // protect these lists with a mutex.
 static struct ip_iface *ifaces;
+static struct ip_protocol *protocols;
 
 int ip_addr_pton(const char *src, ip_addr_t *dst) {
     char *sp = (char *)src;
@@ -150,6 +157,31 @@ struct ip_iface *ip_iface_select(ip_addr_t addr) {
     return NULL;
 }
 
+// NOTE: Must not be call after net_run().
+int ip_protocol_register(uint8_t type, ip_proto_handler_t handler){
+    for (struct ip_protocol *p = protocols; p; p = p->next) {
+        if (p->type == type) {
+            errorf("already registered, type=0x%04x", type);
+            return -1;
+        }
+    }
+
+    struct ip_protocol *p = memory_alloc(sizeof(struct ip_protocol));
+    if (!p) {
+        errorf("memory_alloc() failure");
+        return -1;
+    }
+
+    p->type = type;
+    p->handler = handler;
+    p->next = protocols;
+    protocols = p;
+
+    infof("registered, type=%u", p->type);
+
+    return 0;
+}
+
 static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
     if (len < IP_HDR_SIZE_MIN) {
         errorf("too short");
@@ -191,6 +223,15 @@ static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
     debugf("dev=%s, iface=%s, protocol=%u, total=%u", dev->name,
            ip_addr_ntop(iface->unicast, addr, sizeof(addr)), hdr->proto, total);
     ip_dump(data, len);
+
+    for (struct ip_protocol *p = protocols; p; p = p->next) {
+        if (p->type == hdr->proto) {
+            p->handler(data, total-IPV4_HEADER_LEN(hdr), hdr->src, hdr->dst, iface);
+            return;
+        }
+    }
+
+    // Unsupported protocol
 }
 
 static int ip_output_device(struct ip_iface *iface, const uint8_t *data,
