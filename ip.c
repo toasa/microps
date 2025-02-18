@@ -222,7 +222,7 @@ static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
 
     for (struct ip_protocol *p = protocols; p; p = p->next) {
         if (p->type == hdr->proto) {
-            p->handler(data, total-IPV4_HEADER_LEN(hdr), hdr->src, hdr->dst, iface);
+            p->handler(data+IPV4_HEADER_LEN(hdr), total-IPV4_HEADER_LEN(hdr), hdr->src, hdr->dst, iface);
             return;
         }
     }
