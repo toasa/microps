@@ -59,8 +59,8 @@ struct net_device {
 struct net_device_ops {
     int (*open)(struct net_device *dev);
     int (*close)(struct net_device *dev);
-    int (*transmit)(struct net_device *dev, uint16_t type, const uint8_t *data,
-                    size_t len, const void *dst);
+    int (*tx)(struct net_device *dev, uint16_t type, const uint8_t *data,
+              size_t len, const void *dst);
 };
 
 struct net_iface {

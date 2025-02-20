@@ -5,8 +5,8 @@
 #define DUMMY_MTU UINT16_MAX
 #define DUMMY_IRQ INTR_IRQ_BASE
 
-static int dummy_transmit(struct net_device *dev, uint16_t type,
-                          const uint8_t *data, size_t len, const void *dst) {
+static int dummy_tx(struct net_device *dev, uint16_t type, const uint8_t *data,
+                    size_t len, const void *dst) {
     debugf("dev=%s, type=0x%04x, len=%zu", dev->name, type, len);
     debugdump(data, len);
 
@@ -23,7 +23,7 @@ static int dummy_isr(unsigned int irq, void *id) {
 }
 
 static struct net_device_ops dummy_ops = {
-    .transmit = dummy_transmit,
+    .tx = dummy_tx,
 };
 
 struct net_device *dummy_init(void) {

@@ -22,8 +22,8 @@ struct loopback_queue_entry {
     uint8_t data[];
 };
 
-static int loopback_transmit(struct net_device *dev, uint16_t type,
-                             const uint8_t *data, size_t len, const void *dst) {
+static int loopback_tx(struct net_device *dev, uint16_t type,
+                       const uint8_t *data, size_t len, const void *dst) {
     mutex_lock(&PRIV(dev)->mutex);
     {
         if (PRIV(dev)->queue.len >= LOOPBACK_QUEUE_LIMIT) {
@@ -81,7 +81,7 @@ static int loopback_isr(unsigned int irq, void *id) {
 }
 
 static struct net_device_ops loopback_ops = {
-    .transmit = loopback_transmit,
+    .tx = loopback_tx,
 };
 
 struct net_device *loopback_init(void) {

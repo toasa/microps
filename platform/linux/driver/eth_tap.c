@@ -154,7 +154,7 @@ static int eth_tap_isr(unsigned int irq, void *id) {
 static struct net_device_ops eth_tap_ops = {
     .open = eth_tap_open,
     .close = eth_tap_close,
-    .transmit = eth_tap_tx,
+    .tx = eth_tap_tx,
 };
 
 struct net_device *eth_tap_init(const char *name, const char *addr) {
