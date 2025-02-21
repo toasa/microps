@@ -232,8 +232,8 @@ static void ip_input(const uint8_t *data, size_t len, struct net_dev *dev) {
     // Unsupported protocol
 }
 
-static int ip_output_device(struct ip_iface *iface, const uint8_t *data,
-                            size_t len, ip_addr_t dst) {
+static int ip_output_dev(struct ip_iface *iface, const uint8_t *data,
+                         size_t len, ip_addr_t dst) {
     uint8_t hwaddr[NET_DEV_ADDR_LEN] = {};
     if (NET_IFACE(iface)->dev->flags & NET_DEV_FLAG_NEEDARP) {
         if (dst == iface->broadcast || dst == IP_ADDR_BROADCAST) {
@@ -277,7 +277,7 @@ static ssize_t ip_output_core(struct ip_iface *iface, uint8_t proto,
            ip_addr_ntop(dst, addr, sizeof(addr)), proto, total);
     ip_dump(buf, total);
 
-    return ip_output_device(iface, buf, total, dst);
+    return ip_output_dev(iface, buf, total, dst);
 }
 
 static uint16_t ip_generate_id(void) {
