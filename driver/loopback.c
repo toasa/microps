@@ -33,10 +33,10 @@ static int loopback_tx(struct net_dev *dev, uint16_t type, const uint8_t *data,
         }
 
         struct loopback_queue_entry *entry =
-            memory_alloc(sizeof(struct loopback_queue_entry) + len);
+            mem_alloc(sizeof(struct loopback_queue_entry) + len);
         if (!entry) {
             mutex_unlock(&PRIV(dev)->mutex);
-            errorf("memory_alloc() failure");
+            errorf("mem_alloc() failure");
             return -1;
         }
 
@@ -72,7 +72,7 @@ static int loopback_isr(unsigned int irq, void *id) {
 
         net_input_handler(entry->type, entry->data, entry->len, dev);
 
-        memory_free(entry);
+        mem_free(entry);
     }
 
     mutex_unlock(&PRIV(dev)->mutex);
@@ -98,9 +98,9 @@ struct net_dev *loopback_init(void) {
     dev->flags = NET_DEV_FLAG_LOOPBACK;
     dev->ops = &loopback_ops;
 
-    struct loopback *lo = memory_alloc(sizeof(struct loopback));
+    struct loopback *lo = mem_alloc(sizeof(struct loopback));
     if (!lo) {
-        errorf("memory_alloc() failure");
+        errorf("mem_alloc() failure");
         return NULL;
     }
 

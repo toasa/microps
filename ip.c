@@ -101,21 +101,21 @@ static void ip_dump(const uint8_t *data, size_t len) {
 }
 
 struct ip_iface *ip_iface_alloc(const char *unicast, const char *netmask) {
-    struct ip_iface *iface = memory_alloc(sizeof(struct ip_iface));
+    struct ip_iface *iface = mem_alloc(sizeof(struct ip_iface));
     if (!iface) {
-        errorf("memory_alloc() failure");
+        errorf("mem_alloc() failure");
         return NULL;
     }
 
     NET_IFACE(iface)->family = NET_IFACE_FAMILY_IP;
     if (ip_addr_pton(unicast, &iface->unicast) == -1) {
         errorf("ip_addr_pton failure: unicast(%s)", unicast);
-        memory_free(iface);
+        mem_free(iface);
         return NULL;
     }
     if (ip_addr_pton(netmask, &iface->netmask) == -1) {
         errorf("ip_addr_pton failure: netmask(%s)", netmask);
-        memory_free(iface);
+        mem_free(iface);
         return NULL;
     }
     iface->broadcast = iface->unicast | (~iface->netmask);
@@ -162,9 +162,9 @@ int ip_proto_register(uint8_t type, ip_proto_handler_t handler) {
         }
     }
 
-    struct ip_proto *p = memory_alloc(sizeof(struct ip_proto));
+    struct ip_proto *p = mem_alloc(sizeof(struct ip_proto));
     if (!p) {
-        errorf("memory_alloc() failure");
+        errorf("mem_alloc() failure");
         return -1;
     }
 

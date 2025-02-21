@@ -25,7 +25,7 @@ static struct net_dev *devs;
 static struct net_proto *protos;
 
 struct net_dev *net_dev_alloc(void) {
-    struct net_dev *dev = memory_alloc(sizeof(struct net_dev));
+    struct net_dev *dev = mem_alloc(sizeof(struct net_dev));
 
     if (!dev) {
         errorf("failure");
@@ -147,9 +147,9 @@ int net_proto_register(uint16_t type, proto_handler_t handler) {
         }
     }
 
-    proto = memory_alloc(sizeof(struct net_proto));
+    proto = mem_alloc(sizeof(struct net_proto));
     if (!proto) {
-        errorf("memory_alloc() failure");
+        errorf("mem_alloc() failure");
         return -1;
     }
 
@@ -170,9 +170,9 @@ int net_input_handler(uint16_t type, const uint8_t *data, size_t len,
     for (struct net_proto *proto = protos; proto; proto = proto->next) {
         if (proto->type == type) {
             struct net_proto_queue_entry *entry =
-                memory_alloc(sizeof(struct net_proto_queue_entry) + len);
+                mem_alloc(sizeof(struct net_proto_queue_entry) + len);
             if (!entry) {
-                errorf("memory_alloc() failure");
+                errorf("mem_alloc() failure");
                 return -1;
             }
 
@@ -212,7 +212,7 @@ int net_softirq_handler(void) {
 
             proto->handler(entry->data, entry->len, entry->dev);
 
-            memory_free(entry);
+            mem_free(entry);
         }
     }
 

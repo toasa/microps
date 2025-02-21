@@ -173,9 +173,9 @@ struct net_dev *eth_tap_init(const char *name, const char *addr) {
     }
     dev->ops = &eth_tap_ops;
 
-    struct eth_tap *tap = memory_alloc(sizeof(struct eth_tap));
+    struct eth_tap *tap = mem_alloc(sizeof(struct eth_tap));
     if (!tap) {
-        errorf("memory_alloc() failure");
+        errorf("mem_alloc() failure");
         return NULL;
     }
 
@@ -186,7 +186,7 @@ struct net_dev *eth_tap_init(const char *name, const char *addr) {
 
     if (net_dev_register(dev) == -1) {
         errorf("net_dev_register() failure");
-        memory_free(tap);
+        mem_free(tap);
         return NULL;
     }
 

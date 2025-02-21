@@ -36,9 +36,9 @@ int intr_register_irq(unsigned int irq, irq_handler_t handler, int flags,
         }
     }
 
-    entry = memory_alloc(sizeof(struct irq_entry));
+    entry = mem_alloc(sizeof(struct irq_entry));
     if (!entry) {
-        errorf("memory_alloc() failure");
+        errorf("mem_alloc() failure");
         return -1;
     }
 

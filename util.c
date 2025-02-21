@@ -95,7 +95,7 @@ void *queue_push(struct queue *queue, void *data) {
     if (!queue)
         return NULL;
 
-    entry = memory_alloc(sizeof(*entry));
+    entry = mem_alloc(sizeof(*entry));
     if (!entry)
         return NULL;
 
@@ -128,7 +128,7 @@ void *queue_pop(struct queue *queue) {
 
     queue->len--;
     data = entry->data;
-    memory_free(entry);
+    mem_free(entry);
     return data;
 }
 

@@ -9,11 +9,11 @@
  * Memory
  */
 
-static inline void *memory_alloc(size_t size) {
+static inline void *mem_alloc(size_t size) {
     return calloc(1, size);
 }
 
-static inline void memory_free(void *ptr) {
+static inline void mem_free(void *ptr) {
     free(ptr);
 }
 
