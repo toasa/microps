@@ -16,7 +16,7 @@ static void on_signal(int s) {
 }
 
 static int setup_loopback(void) {
-    struct net_device *dev = loopback_init();
+    struct net_dev *dev = loopback_init();
     if (!dev) {
         errorf("loopback_init() failure");
         return -1;
@@ -37,7 +37,7 @@ static int setup_loopback(void) {
 }
 
 static int setup_ethtap(void) {
-    struct net_device *dev = eth_tap_init(ETHER_TAP_NAME, ETHER_TAP_HW_ADDR);
+    struct net_dev *dev = eth_tap_init(ETHER_TAP_NAME, ETHER_TAP_HW_ADDR);
     if (!dev) {
         errorf("eth_tap_init() failure");
         return -1;

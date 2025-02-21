@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    struct net_device *dev = loopback_init();
+    struct net_dev *dev = loopback_init();
     if (!dev) {
         errorf("loopback_init() failure");
         return -1;
@@ -31,9 +31,9 @@ int main(int argc, char *argv[]) {
     }
 
     while (!terminate) {
-        if (net_device_output(dev, NET_PROTOCOL_TYPE_IP, test_data,
-                              sizeof(test_data), NULL) == -1) {
-            errorf("net_device_output() failure");
+        if (net_dev_output(dev, NET_PROTO_TYPE_IP, test_data, sizeof(test_data),
+                           NULL) == -1) {
+            errorf("net_dev_output() failure");
             break;
         }
 

@@ -25,14 +25,14 @@ extern const uint8_t ETH_ADDR_BROADCAST[ETH_ADDR_LEN];
 extern int eth_addr_pton(const char *p, uint8_t *n);
 extern char *eth_addr_ntop(const uint8_t *n, char *p, size_t size);
 
-typedef ssize_t (*eth_tx_t)(struct net_device *dev, const uint8_t *data,
+typedef ssize_t (*eth_tx_t)(struct net_dev *dev, const uint8_t *data,
                             size_t len);
-typedef ssize_t (*eth_rx_t)(struct net_device *dev, uint8_t *buf, size_t size);
-extern int eth_tx_helper(struct net_device *dev, uint16_t type,
+typedef ssize_t (*eth_rx_t)(struct net_dev *dev, uint8_t *buf, size_t size);
+extern int eth_tx_helper(struct net_dev *dev, uint16_t type,
                          const uint8_t *payload, size_t plen, const void *dst,
                          eth_tx_t tx);
-extern int eth_rx_helper(struct net_device *dev, eth_rx_t rx);
+extern int eth_rx_helper(struct net_dev *dev, eth_rx_t rx);
 
-extern void eth_setup_helper(struct net_device *dev);
+extern void eth_setup_helper(struct net_dev *dev);
 
 #endif

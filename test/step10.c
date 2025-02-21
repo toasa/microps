@@ -21,7 +21,7 @@ static int setup(void) {
         return -1;
     }
 
-    struct net_device *dev = loopback_init();
+    struct net_dev *dev = loopback_init();
     if (!dev) {
         errorf("loopback_init() failure");
         return -1;
@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
     size_t offset = IP_HDR_SIZE_MIN;
 
     while (!terminate) {
-        if (ip_output(IP_PROTOCOL_ICMP, test_data + offset,
+        if (ip_output(IP_PROTO_ICMP, test_data + offset,
                       sizeof(test_data) - offset, src, dst) == -1) {
             errorf("ip_output() failure");
             break;

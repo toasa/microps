@@ -26,7 +26,7 @@ struct eth_tap {
 
 #define PRIV(x) ((struct eth_tap *)x->priv)
 
-static int eth_tap_addr(struct net_device *dev) {
+static int eth_tap_addr(struct net_dev *dev) {
     // ioctl(sock, SIOCGIFHWADDR) でハードウェアアドレスを取得するために、
     // ソケットをオープンする。
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
@@ -50,7 +50,7 @@ static int eth_tap_addr(struct net_device *dev) {
     return 0;
 }
 
-static int eth_tap_open(struct net_device *dev) {
+static int eth_tap_open(struct net_dev *dev) {
     struct eth_tap *tap = PRIV(dev);
     tap->fd = open(CLONE_DEVICE, O_RDWR);
     if (tap->fd == -1) {
@@ -98,22 +98,22 @@ static int eth_tap_open(struct net_device *dev) {
     return 0;
 }
 
-static int eth_tap_close(struct net_device *dev) {
+static int eth_tap_close(struct net_dev *dev) {
     close(PRIV(dev)->fd);
     return 0;
 }
 
-static ssize_t eth_tap_write(struct net_device *dev, const uint8_t *frame,
+static ssize_t eth_tap_write(struct net_dev *dev, const uint8_t *frame,
                              size_t flen) {
     return write(PRIV(dev)->fd, frame, flen);
 }
 
-static int eth_tap_tx(struct net_device *dev, uint16_t type, const uint8_t *buf,
+static int eth_tap_tx(struct net_dev *dev, uint16_t type, const uint8_t *buf,
                       size_t len, const void *dst) {
     return eth_tx_helper(dev, type, buf, len, dst, eth_tap_write);
 }
 
-static ssize_t eth_tap_read(struct net_device *dev, uint8_t *buf, size_t size) {
+static ssize_t eth_tap_read(struct net_dev *dev, uint8_t *buf, size_t size) {
     ssize_t len = read(PRIV(dev)->fd, buf, size);
     if (len <= 0) {
         if (len == -1 && errno != EINTR)
@@ -126,7 +126,7 @@ static ssize_t eth_tap_read(struct net_device *dev, uint8_t *buf, size_t size) {
 }
 
 static int eth_tap_isr(unsigned int irq, void *id) {
-    struct net_device *dev = (struct net_device *)id;
+    struct net_dev *dev = (struct net_dev *)id;
     struct pollfd pfd = {
         .fd = PRIV(dev)->fd,
         .events = POLLIN,
@@ -151,16 +151,16 @@ static int eth_tap_isr(unsigned int irq, void *id) {
     return 0;
 }
 
-static struct net_device_ops eth_tap_ops = {
+static struct net_dev_ops eth_tap_ops = {
     .open = eth_tap_open,
     .close = eth_tap_close,
     .tx = eth_tap_tx,
 };
 
-struct net_device *eth_tap_init(const char *name, const char *addr) {
-    struct net_device *dev = net_device_alloc();
+struct net_dev *eth_tap_init(const char *name, const char *addr) {
+    struct net_dev *dev = net_dev_alloc();
     if (!dev) {
-        errorf("net_device_alloc() failure");
+        errorf("net_dev_alloc() failure");
         return NULL;
     }
 
@@ -184,8 +184,8 @@ struct net_device *eth_tap_init(const char *name, const char *addr) {
     tap->irq = ETH_TAP_IRQ;
     dev->priv = tap;
 
-    if (net_device_register(dev) == -1) {
-        errorf("net_device_register() failure");
+    if (net_dev_register(dev) == -1) {
+        errorf("net_dev_register() failure");
         memory_free(tap);
         return NULL;
     }

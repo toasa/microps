@@ -3,6 +3,6 @@
 
 #include "net.h"
 
-extern struct net_device *loopback_init();
+extern struct net_dev *loopback_init();
 
 #endif

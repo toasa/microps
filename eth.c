@@ -62,7 +62,7 @@ static void eth_dump(const uint8_t *frame, size_t flen) {
     funlockfile(stderr);
 }
 
-int eth_tx_helper(struct net_device *dev, uint16_t type, const uint8_t *data,
+int eth_tx_helper(struct net_dev *dev, uint16_t type, const uint8_t *data,
                   size_t len, const void *dst, eth_tx_t tx) {
     uint8_t frame[ETH_FRAME_SIZE_MAX] = {};
 
@@ -84,7 +84,7 @@ int eth_tx_helper(struct net_device *dev, uint16_t type, const uint8_t *data,
     return tx(dev, frame, flen) == (ssize_t)flen ? 0 : -1;
 }
 
-int eth_rx_helper(struct net_device *dev, eth_rx_t rx) {
+int eth_rx_helper(struct net_dev *dev, eth_rx_t rx) {
     uint8_t frame[ETH_FRAME_SIZE_MAX];
     ssize_t flen = rx(dev, frame, sizeof(frame));
     if (flen < (ssize_t)sizeof(struct eth_hdr)) {
@@ -108,10 +108,10 @@ int eth_rx_helper(struct net_device *dev, eth_rx_t rx) {
                              flen - sizeof(struct eth_hdr), dev);
 }
 
-void eth_setup_helper(struct net_device *dev) {
-    dev->type = NET_DEVICE_TYPE_ETHERNET;
+void eth_setup_helper(struct net_dev *dev) {
+    dev->type = NET_DEV_TYPE_ETHERNET;
     dev->mtu = ETH_PAYLOAD_SIZE_MAX;
-    dev->flags = (NET_DEVICE_FLAG_BROADCAST | NET_DEVICE_FLAG_NEEDARP);
+    dev->flags = (NET_DEV_FLAG_BROADCAST | NET_DEV_FLAG_NEEDARP);
     dev->hlen = ETH_HDR_SIZE;
     dev->alen = ETH_ADDR_LEN;
     memcpy(dev->broadcast, ETH_ADDR_BROADCAST, ETH_ADDR_LEN);

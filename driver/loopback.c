@@ -22,8 +22,8 @@ struct loopback_queue_entry {
     uint8_t data[];
 };
 
-static int loopback_tx(struct net_device *dev, uint16_t type,
-                       const uint8_t *data, size_t len, const void *dst) {
+static int loopback_tx(struct net_dev *dev, uint16_t type, const uint8_t *data,
+                       size_t len, const void *dst) {
     mutex_lock(&PRIV(dev)->mutex);
     {
         if (PRIV(dev)->queue.len >= LOOPBACK_QUEUE_LIMIT) {
@@ -58,7 +58,7 @@ static int loopback_tx(struct net_device *dev, uint16_t type,
 }
 
 static int loopback_isr(unsigned int irq, void *id) {
-    struct net_device *dev = (struct net_device *)id;
+    struct net_dev *dev = (struct net_dev *)id;
     mutex_lock(&PRIV(dev)->mutex);
 
     while (1) {
@@ -80,22 +80,22 @@ static int loopback_isr(unsigned int irq, void *id) {
     return 0;
 }
 
-static struct net_device_ops loopback_ops = {
+static struct net_dev_ops loopback_ops = {
     .tx = loopback_tx,
 };
 
-struct net_device *loopback_init(void) {
-    struct net_device *dev = net_device_alloc();
+struct net_dev *loopback_init(void) {
+    struct net_dev *dev = net_dev_alloc();
     if (!dev) {
-        errorf("net_device_alloc() failure");
+        errorf("net_dev_alloc() failure");
         return NULL;
     }
 
-    dev->type = NET_DEVICE_TYPE_LOOPBACK;
+    dev->type = NET_DEV_TYPE_LOOPBACK;
     dev->mtu = LOOPBACK_MTU;
     dev->hlen = 0; /* non header */
     dev->alen = 0; /* non address */
-    dev->flags = NET_DEVICE_FLAG_LOOPBACK;
+    dev->flags = NET_DEV_FLAG_LOOPBACK;
     dev->ops = &loopback_ops;
 
     struct loopback *lo = memory_alloc(sizeof(struct loopback));
@@ -110,8 +110,8 @@ struct net_device *loopback_init(void) {
 
     dev->priv = lo;
 
-    if (net_device_register(dev) == -1) {
-        errorf("net_device_register() failure");
+    if (net_dev_register(dev) == -1) {
+        errorf("net_dev_register() failure");
         return NULL;
     }
 

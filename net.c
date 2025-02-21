@@ -6,26 +6,26 @@
 #include "platform.h"
 #include "util.h"
 
-struct net_protocol {
-    struct net_protocol *next;
+struct net_proto {
+    struct net_proto *next;
     uint16_t type;
     struct queue input_queue;
-    protocol_handler_t handler;
+    proto_handler_t handler;
 };
 
-struct net_protocol_queue_entry {
-    struct net_device *dev;
+struct net_proto_queue_entry {
+    struct net_dev *dev;
     size_t len;
     uint8_t data[];
 };
 
 // NOTE: If you want to add/delete the entries after net_run(),
 // you need to protect these lists with a mutex.
-static struct net_device *devices;
-static struct net_protocol *protocols;
+static struct net_dev *devs;
+static struct net_proto *protos;
 
-struct net_device *net_device_alloc(void) {
-    struct net_device *dev = memory_alloc(sizeof(struct net_device));
+struct net_dev *net_dev_alloc(void) {
+    struct net_dev *dev = memory_alloc(sizeof(struct net_dev));
 
     if (!dev) {
         errorf("failure");
@@ -36,22 +36,22 @@ struct net_device *net_device_alloc(void) {
 }
 
 // NOTE: Must not be call after net_run().
-int net_device_register(struct net_device *dev) {
+int net_dev_register(struct net_dev *dev) {
     static unsigned int index = 0;
 
     dev->index = index++;
     snprintf(dev->name, sizeof(dev->name), "net%d", dev->index);
 
-    dev->next = devices;
-    devices = dev;
+    dev->next = devs;
+    devs = dev;
 
     infof("registered, dev=%s, type=0x%04x", dev->name, dev->type);
 
     return 0;
 }
 
-static int net_device_open(struct net_device *dev) {
-    if (NET_DEVICE_IS_UP(dev)) {
+static int net_dev_open(struct net_dev *dev) {
+    if (NET_DEV_IS_UP(dev)) {
         errorf("already opend, dev=%s", dev->name);
         return -1;
     }
@@ -63,14 +63,14 @@ static int net_device_open(struct net_device *dev) {
         }
     }
 
-    dev->flags |= NET_DEVICE_FLAG_UP;
-    infof("dev=%s, state=%s", dev->name, NET_DEVICE_STATE(dev));
+    dev->flags |= NET_DEV_FLAG_UP;
+    infof("dev=%s, state=%s", dev->name, NET_DEV_STATE(dev));
 
     return 0;
 }
 
-static int net_device_close(struct net_device *dev) {
-    if (!NET_DEVICE_IS_UP(dev)) {
+static int net_dev_close(struct net_dev *dev) {
+    if (!NET_DEV_IS_UP(dev)) {
         errorf("not opened, dev=%s", dev->name);
         return -1;
     }
@@ -82,14 +82,14 @@ static int net_device_close(struct net_device *dev) {
         }
     }
 
-    dev->flags &= ~NET_DEVICE_FLAG_UP;
-    infof("dev=%s, state=%s", dev->name, NET_DEVICE_STATE(dev));
+    dev->flags &= ~NET_DEV_FLAG_UP;
+    infof("dev=%s, state=%s", dev->name, NET_DEV_STATE(dev));
 
     return 0;
 }
 
 // NOTE: Must not be call after net_run().
-int net_device_add_iface(struct net_device *dev, struct net_iface *iface) {
+int net_dev_add_iface(struct net_dev *dev, struct net_iface *iface) {
     for (struct net_iface *i = dev->ifaces; i; i = i->next) {
         if (i->family == iface->family) {
             // NOTE: For simplicity, only one iface can be added per family.
@@ -105,7 +105,7 @@ int net_device_add_iface(struct net_device *dev, struct net_iface *iface) {
     return 0;
 }
 
-struct net_iface *net_device_get_iface(struct net_device *dev, int family) {
+struct net_iface *net_dev_get_iface(struct net_dev *dev, int family) {
     for (struct net_iface *i = dev->ifaces; i; i = i->next) {
         if (i->family == family)
             return i;
@@ -114,9 +114,9 @@ struct net_iface *net_device_get_iface(struct net_device *dev, int family) {
     return NULL;
 }
 
-int net_device_output(struct net_device *dev, uint16_t type,
-                      const uint8_t *data, size_t len, const void *dst) {
-    if (!NET_DEVICE_IS_UP(dev)) {
+int net_dev_output(struct net_dev *dev, uint16_t type, const uint8_t *data,
+                   size_t len, const void *dst) {
+    if (!NET_DEV_IS_UP(dev)) {
         errorf("not linkup, dev=%s", dev->name);
         return -1;
     }
@@ -138,16 +138,16 @@ int net_device_output(struct net_device *dev, uint16_t type,
 }
 
 // NOTE: Must not be call after net_run()
-int net_protocol_register(uint16_t type, protocol_handler_t handler) {
-    struct net_protocol *proto;
-    for (proto = protocols; proto; proto = proto->next) {
+int net_proto_register(uint16_t type, proto_handler_t handler) {
+    struct net_proto *proto;
+    for (proto = protos; proto; proto = proto->next) {
         if (type == proto->type) {
             errorf("aflready registered, type=0x%04x", type);
             return -1;
         }
     }
 
-    proto = memory_alloc(sizeof(struct net_protocol));
+    proto = memory_alloc(sizeof(struct net_proto));
     if (!proto) {
         errorf("memory_alloc() failure");
         return -1;
@@ -157,8 +157,8 @@ int net_protocol_register(uint16_t type, protocol_handler_t handler) {
     proto->handler = handler;
     queue_init(&proto->input_queue);
 
-    proto->next = protocols;
-    protocols = proto;
+    proto->next = protos;
+    protos = proto;
 
     infof("registered, type=0x%04x", type);
 
@@ -166,11 +166,11 @@ int net_protocol_register(uint16_t type, protocol_handler_t handler) {
 }
 
 int net_input_handler(uint16_t type, const uint8_t *data, size_t len,
-                      struct net_device *dev) {
-    for (struct net_protocol *proto = protocols; proto; proto = proto->next) {
+                      struct net_dev *dev) {
+    for (struct net_proto *proto = protos; proto; proto = proto->next) {
         if (proto->type == type) {
-            struct net_protocol_queue_entry *entry =
-                memory_alloc(sizeof(struct net_protocol_queue_entry) + len);
+            struct net_proto_queue_entry *entry =
+                memory_alloc(sizeof(struct net_proto_queue_entry) + len);
             if (!entry) {
                 errorf("memory_alloc() failure");
                 return -1;
@@ -198,9 +198,9 @@ int net_input_handler(uint16_t type, const uint8_t *data, size_t len,
 }
 
 int net_softirq_handler(void) {
-    for (struct net_protocol *proto = protocols; proto; proto = proto->next) {
+    for (struct net_proto *proto = protos; proto; proto = proto->next) {
         while (1) {
-            struct net_protocol_queue_entry *entry =
+            struct net_proto_queue_entry *entry =
                 queue_pop(&proto->input_queue);
             if (!entry)
                 break;
@@ -226,8 +226,8 @@ int net_run(void) {
     }
 
     debugf("open all devices...");
-    for (struct net_device *dev = devices; dev; dev = dev->next)
-        net_device_open(dev);
+    for (struct net_dev *dev = devs; dev; dev = dev->next)
+        net_dev_open(dev);
 
     debugf("running...");
 
@@ -236,8 +236,8 @@ int net_run(void) {
 
 void net_shutdown(void) {
     debugf("close all devices...");
-    for (struct net_device *dev = devices; dev; dev = dev->next)
-        net_device_close(dev);
+    for (struct net_dev *dev = devs; dev; dev = dev->next)
+        net_dev_close(dev);
 
     intr_shutdown();
 

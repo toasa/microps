@@ -128,12 +128,12 @@ int icmp_output(uint8_t type, uint8_t code, uint32_t vals, const uint8_t *data,
            ip_addr_ntop(dst, addr2, sizeof(addr2)), msg_len);
     icmp_dump(buf, msg_len);
 
-    return ip_output(IP_PROTOCOL_ICMP, buf, msg_len, src, dst);
+    return ip_output(IP_PROTO_ICMP, buf, msg_len, src, dst);
 }
 
 int icmp_init(void) {
-    if (ip_protocol_register(IP_PROTOCOL_ICMP, icmp_input) == -1) {
-        errorf("ip_protocol_register() failure");
+    if (ip_proto_register(IP_PROTO_ICMP, icmp_input) == -1) {
+        errorf("ip_proto_register() failure");
         return -1;
     }
 

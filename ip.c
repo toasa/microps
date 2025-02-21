@@ -28,8 +28,8 @@ struct ip_hdr {
     uint8_t options[];
 };
 
-struct ip_protocol {
-    struct ip_protocol *next;
+struct ip_proto {
+    struct ip_proto *next;
     uint8_t type;
     ip_proto_handler_t handler;
 };
@@ -40,7 +40,7 @@ const ip_addr_t IP_ADDR_BROADCAST = 0xffffffff; /* 255.255.255.255 */
 // NOTE: If you want to add/delete the entries after net_run(), you need to
 // protect these lists with a mutex.
 static struct ip_iface *ifaces;
-static struct ip_protocol *protocols;
+static struct ip_proto *protos;
 
 int ip_addr_pton(const char *src, ip_addr_t *dst) {
     char *sp = (char *)src;
@@ -86,7 +86,7 @@ static void ip_dump(const uint8_t *data, size_t len) {
     fprintf(stderr, "     offset: 0x%04x [flags=%x, offset=%u]\n", offset,
             (offset & 0xe000) >> 13, offset & 0x1fff);
     fprintf(stderr, "        ttl: %u\n", hdr->ttl);
-    fprintf(stderr, "   protocol: %u\n", hdr->proto);
+    fprintf(stderr, "      proto: %u\n", hdr->proto);
     fprintf(stderr, "      cksum: 0x%04x\n", ntoh16(hdr->chksum));
     fprintf(stderr, "        src: %s\n",
             ip_addr_ntop(hdr->src, addr, sizeof(addr)));
@@ -124,9 +124,9 @@ struct ip_iface *ip_iface_alloc(const char *unicast, const char *netmask) {
 }
 
 // NOTE: Must not be call after net_run().
-int ip_iface_register(struct net_device *dev, struct ip_iface *iface) {
-    if (net_device_add_iface(dev, NET_IFACE(iface)) == -1) {
-        errorf("net_device_add_iface() failure");
+int ip_iface_register(struct net_dev *dev, struct ip_iface *iface) {
+    if (net_dev_add_iface(dev, NET_IFACE(iface)) == -1) {
+        errorf("net_dev_add_iface() failure");
         return -1;
     }
 
@@ -154,15 +154,15 @@ struct ip_iface *ip_iface_select(ip_addr_t addr) {
 }
 
 // NOTE: Must not be call after net_run().
-int ip_protocol_register(uint8_t type, ip_proto_handler_t handler){
-    for (struct ip_protocol *p = protocols; p; p = p->next) {
+int ip_proto_register(uint8_t type, ip_proto_handler_t handler) {
+    for (struct ip_proto *p = protos; p; p = p->next) {
         if (p->type == type) {
             errorf("already registered, type=0x%04x", type);
             return -1;
         }
     }
 
-    struct ip_protocol *p = memory_alloc(sizeof(struct ip_protocol));
+    struct ip_proto *p = memory_alloc(sizeof(struct ip_proto));
     if (!p) {
         errorf("memory_alloc() failure");
         return -1;
@@ -170,15 +170,15 @@ int ip_protocol_register(uint8_t type, ip_proto_handler_t handler){
 
     p->type = type;
     p->handler = handler;
-    p->next = protocols;
-    protocols = p;
+    p->next = protos;
+    protos = p;
 
     infof("registered, type=%u", p->type);
 
     return 0;
 }
 
-static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
+static void ip_input(const uint8_t *data, size_t len, struct net_dev *dev) {
     if (len < IP_HDR_SIZE_MIN) {
         errorf("too short");
         return;
@@ -217,11 +217,11 @@ static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
         return;
 
     char addr[IP_ADDR_STR_LEN];
-    debugf("dev=%s, iface=%s, protocol=%u, total=%u", dev->name,
+    debugf("dev=%s, iface=%s, proto=%u, total=%u", dev->name,
            ip_addr_ntop(iface->unicast, addr, sizeof(addr)), hdr->proto, total);
     ip_dump(data, len);
 
-    for (struct ip_protocol *p = protocols; p; p = p->next) {
+    for (struct ip_proto *p = protos; p; p = p->next) {
         if (p->type == hdr->proto) {
             p->handler(data + hdr_len, total - hdr_len, hdr->src, hdr->dst,
                        iface);
@@ -234,8 +234,8 @@ static void ip_input(const uint8_t *data, size_t len, struct net_device *dev) {
 
 static int ip_output_device(struct ip_iface *iface, const uint8_t *data,
                             size_t len, ip_addr_t dst) {
-    uint8_t hwaddr[NET_DEVICE_ADDR_LEN] = {};
-    if (NET_IFACE(iface)->dev->flags & NET_DEVICE_FLAG_NEEDARP) {
+    uint8_t hwaddr[NET_DEV_ADDR_LEN] = {};
+    if (NET_IFACE(iface)->dev->flags & NET_DEV_FLAG_NEEDARP) {
         if (dst == iface->broadcast || dst == IP_ADDR_BROADCAST) {
             memcpy(hwaddr, NET_IFACE(iface)->dev->broadcast,
                    NET_IFACE(iface)->dev->alen);
@@ -245,8 +245,8 @@ static int ip_output_device(struct ip_iface *iface, const uint8_t *data,
         }
     }
 
-    return net_device_output(NET_IFACE(iface)->dev, NET_PROTOCOL_TYPE_IP, data,
-                             len, &dst);
+    return net_dev_output(NET_IFACE(iface)->dev, NET_PROTO_TYPE_IP, data, len,
+                          &dst);
 }
 
 static ssize_t ip_output_core(struct ip_iface *iface, uint8_t proto,
@@ -329,8 +329,8 @@ ssize_t ip_output(uint8_t proto, const uint8_t *data, size_t len, ip_addr_t src,
 }
 
 int ip_init(void) {
-    if (net_protocol_register(NET_PROTOCOL_TYPE_IP, ip_input) == -1) {
-        errorf("net_protocol_register() failure");
+    if (net_proto_register(NET_PROTO_TYPE_IP, ip_input) == -1) {
+        errorf("net_proto_register() failure");
         return -1;
     }
 

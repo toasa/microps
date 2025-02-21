@@ -3,6 +3,6 @@
 
 #include "net.h"
 
-extern struct net_device *eth_tap_init(const char *name, const char *addr);
+extern struct net_dev *eth_tap_init(const char *name, const char *addr);
 
 #endif

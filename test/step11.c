@@ -22,7 +22,7 @@ static int setup(void) {
         return -1;
     }
 
-    struct net_device *dev = loopback_init();
+    struct net_dev *dev = loopback_init();
     if (!dev) {
         errorf("loopback_init() failure");
         return -1;
