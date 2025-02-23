@@ -22,6 +22,8 @@
 #define IP_PROTO_TCP  6
 #define IP_PROTO_UDP 17
 
+#define IP_IFACE(x) ((struct ip_iface *)(x))
+
 typedef uint32_t ip_addr_t;
 
 struct ip_iface {
