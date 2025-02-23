@@ -205,9 +205,10 @@ static void ip_input(const uint8_t *data, size_t len, struct net_dev *dev) {
         return;
     }
 
-    struct ip_iface *iface = ip_iface_select(hdr->src);
+    struct ip_iface *iface =
+        (struct ip_iface *)net_dev_get_iface(dev, NET_IFACE_FAMILY_IP);
     if (iface == NULL) {
-        errorf("ip_iface_select() failure: %s", hdr->src);
+        errorf("net_dev_get_iface() failure: %s", hdr->src);
         return;
     }
 
