@@ -158,6 +158,27 @@ static struct arp_cache *arp_cache_insert(ip_addr_t pa, const uint8_t *ha) {
     return c;
 }
 
+static int arp_request(struct net_iface *iface, ip_addr_t tpa) {
+    struct arp_hdr hdr = {
+        .htype = hton16(ARP_HWTYPE_ETH),
+        .ptype = hton16(ARP_PROTO_IP),
+        .hlen = ETH_ADDR_LEN,
+        .plen = IP_ADDR_LEN,
+        .op = hton16(ARP_OP_REQUEST),
+    };
+    struct arp_eth_ip req = {};
+    memcpy(req.tpa, &tpa, sizeof(req.tpa));
+    memcpy(req.sha, iface->dev->addr, sizeof(req.sha));
+    memcpy(req.spa, &IP_IFACE(iface)->unicast, sizeof(req.spa));
+    req.hdr = hdr;
+
+    debugf("dev=%s, len=%zu", iface->dev->name, sizeof(req));
+    arp_dump((uint8_t *)&req, sizeof(req));
+
+    return net_dev_output(iface->dev, ETH_TYPE_ARP, (uint8_t *)&req,
+                          sizeof(req), iface->dev->broadcast);
+}
+
 static int arp_reply(struct net_iface *iface, const uint8_t *tha, ip_addr_t tpa,
                      const uint8_t *dst) {
     struct arp_hdr hdr = {
@@ -242,11 +263,32 @@ int arp_resolve(struct net_iface *iface, ip_addr_t pa, uint8_t *ha) {
     mutex_lock(&mutex);
     struct arp_cache *c = arp_cache_select(pa);
     if (!c) {
+        c = arp_cache_alloc();
+        if (!c) {
+            mutex_unlock(&mutex);
+            errorf("arp_cache_alloc() failure");
+            return ARP_RESOLVE_ERROR;
+        }
+
+        c->state = ARP_CACHE_STATE_INCOMP;
+        c->pa = pa;
+        gettimeofday(&c->timestamp, NULL);
+        mutex_unlock(&mutex);
+
         debugf("arp cache not found, pa=%s",
                ip_addr_ntop(pa, addr1, sizeof(addr1)));
-        mutex_unlock(&mutex);
-        return ARP_RESOLVE_ERROR;
+        arp_request(iface, pa);
+
+        return ARP_RESOLVE_INCOMP;
     }
+    if (c->state == ARP_CACHE_STATE_INCOMP) {
+        // 見つかった ARP キャッシュの状態が INCOMPLETE であれば、
+        // ARP リクエストがパケロスしている可能性があるため、念の為再送する：
+        mutex_unlock(&mutex);
+        arp_request(iface, pa);
+        return ARP_RESOLVE_INCOMP;
+    }
+
     memcpy(ha, c->ha, ETH_ADDR_LEN);
     mutex_unlock(&mutex);
 
