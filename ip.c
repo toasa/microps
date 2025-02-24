@@ -249,7 +249,7 @@ static int ip_output_dev(struct ip_iface *iface, const uint8_t *data,
     }
 
     return net_dev_output(NET_IFACE(iface)->dev, NET_PROTO_TYPE_IP, data, len,
-                          &dst);
+                          hwaddr);
 }
 
 static ssize_t ip_output_core(struct ip_iface *iface, uint8_t proto,
