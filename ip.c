@@ -243,10 +243,8 @@ static int ip_output_dev(struct ip_iface *iface, const uint8_t *data,
                    NET_IFACE(iface)->dev->alen);
         } else {
             int ret = arp_resolve(NET_IFACE(iface), dst, hwaddr);
-            if (ret != ARP_RESOLVE_FOUND) {
-                errorf("arp_resolve() failure");
+            if (ret != ARP_RESOLVE_FOUND)
                 return ret;
-            }
         }
     }
 
