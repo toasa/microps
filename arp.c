@@ -221,7 +221,8 @@ static void arp_input(const uint8_t *data, size_t len, struct net_dev *dev) {
             mutex_unlock(&mutex);
         }
 
-        arp_reply(iface, (uint8_t *)msg->sha, spa, msg->sha);
+        if (ntoh16(msg->hdr.op) == ARP_OP_REQUEST)
+            arp_reply(iface, (uint8_t *)msg->sha, spa, msg->sha);
     }
 }
 
