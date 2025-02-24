@@ -250,7 +250,7 @@ int arp_resolve(struct net_iface *iface, ip_addr_t pa, uint8_t *ha) {
     memcpy(ha, c->ha, ETH_ADDR_LEN);
     mutex_unlock(&mutex);
 
-    debugf("arp resolved, pa=%s, ha=%s", ip_addr_ntop(pa, addr1, sizeof(addr1)),
+    debugf("resolved, pa=%s, ha=%s", ip_addr_ntop(pa, addr1, sizeof(addr1)),
            eth_addr_ntop(ha, addr2, sizeof(addr2)));
     return ARP_RESOLVE_FOUND;
 }
