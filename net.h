@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #ifndef IFNAMSIZ
 #define IFNAMSIZ 16
@@ -79,6 +80,9 @@ extern int net_dev_output(struct net_dev *dev, uint16_t type,
 typedef void (*proto_handler_t)(const uint8_t *data, size_t len,
                                 struct net_dev *dev);
 extern int net_proto_register(uint16_t type, proto_handler_t hadnler);
+
+extern int net_timer_register(struct timeval interval, void (*handler)(void));
+extern int net_timer_handler(void);
 
 // デバイスが受信したパケットを適切なプロトコルスタックへ渡す
 extern int net_input_handler(uint16_t type, const uint8_t *data, size_t len,

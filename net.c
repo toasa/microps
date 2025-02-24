@@ -1,4 +1,5 @@
 #include <string.h>
+#include <sys/time.h>
 
 #include "arp.h"
 #include "icmp.h"
@@ -20,10 +21,18 @@ struct net_proto_queue_entry {
     uint8_t data[];
 };
 
+struct net_timer {
+    struct net_timer *next;
+    struct timeval interval;
+    struct timeval last;
+    void (*handler)(void);
+};
+
 // NOTE: If you want to add/delete the entries after net_run(),
 // you need to protect these lists with a mutex.
 static struct net_dev *devs;
 static struct net_proto *protos;
+static struct net_timer *timers;
 
 struct net_dev *net_dev_alloc(void) {
     struct net_dev *dev = mem_alloc(sizeof(struct net_dev));
@@ -163,6 +172,41 @@ int net_proto_register(uint16_t type, proto_handler_t handler) {
 
     infof("registered, type=0x%04x", type);
 
+    return 0;
+}
+
+// NOTE: must not be call after net_run().
+int net_timer_register(struct timeval interval, void (*handler)(void)) {
+    struct net_timer *timer = mem_alloc(sizeof(struct net_timer));
+    if (!timer) {
+        errorf("mem_alloc() failure");
+        return -1;
+    }
+
+    timer->handler = handler;
+    timer->interval = interval;
+    gettimeofday(&timer->last, NULL);
+
+    timer->next = timers;
+    timers = timer;
+
+    infof("registered, interval={%d, %d}", interval.tv_sec, interval.tv_usec);
+
+    return 0;
+}
+
+int net_timer_handler(void) {
+    for (struct net_timer *t = timers; t; t = t->next) {
+        struct timeval now;
+        gettimeofday(&now, NULL);
+
+        struct timeval diff;
+        timersub(&now, &t->last, &diff);
+        if (timercmp(&t->interval, &diff, <)) {
+            t->handler();
+            t->last = now;
+        }
+    }
     return 0;
 }
 

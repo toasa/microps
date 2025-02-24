@@ -16,6 +16,7 @@
 #define ARP_OP_REPLY 2
 
 #define ARP_CACHE_SIZE 32
+#define ARP_CACHE_TIMEOUT_SEC 30
 
 #define ARP_CACHE_STATE_FREE 0
 #define ARP_CACHE_STATE_INCOMP 1
@@ -297,9 +298,34 @@ int arp_resolve(struct net_iface *iface, ip_addr_t pa, uint8_t *ha) {
     return ARP_RESOLVE_FOUND;
 }
 
+static void arp_timer_handler(void) {
+    mutex_lock(&mutex);
+
+    struct timeval now;
+    gettimeofday(&now, NULL);
+
+    for (struct arp_cache *c = caches; c < tailof(caches); c++) {
+        if (c->state != ARP_CACHE_STATE_FREE &&
+            c->state != ARP_CACHE_STATE_STATIC) {
+            struct timeval diff;
+            timersub(&now, &c->timestamp, &diff);
+            if (ARP_CACHE_TIMEOUT_SEC < diff.tv_sec)
+                arp_cache_delete(c);
+        }
+    }
+
+    mutex_unlock(&mutex);
+}
+
 int arp_init(void) {
     if (net_proto_register(NET_PROTO_TYPE_ARP, arp_input) == -1) {
         errorf("net_proto_register() failure");
+        return -1;
+    }
+
+    struct timeval interval = {1, 0}; // 1sec
+    if (net_timer_register(interval, arp_timer_handler) == -1) {
+        errorf("net_timer_register() failure");
         return -1;
     }
 
