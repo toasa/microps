@@ -203,12 +203,13 @@ static void arp_input(const uint8_t *data, size_t len, struct net_dev *dev) {
     debugf("dev=%s, len=%zu", dev->name, len);
     arp_dump(data, len);
 
-    ip_addr_t tpa;
+    ip_addr_t spa, tpa;
+    memcpy(&spa, msg->spa, sizeof(spa));
     memcpy(&tpa, msg->tpa, sizeof(tpa));
 
     int marge = 0;
     mutex_lock(&mutex);
-    if (arp_cache_update(*(ip_addr_t *)msg->spa, msg->sha))
+    if (arp_cache_update(spa, msg->sha))
         marge = 1;
     mutex_unlock(&mutex);
 
@@ -216,11 +217,11 @@ static void arp_input(const uint8_t *data, size_t len, struct net_dev *dev) {
     if (iface && IP_IFACE(iface)->unicast == tpa) {
         if (!marge) {
             mutex_lock(&mutex);
-            arp_cache_insert(*(ip_addr_t *)msg->spa, msg->sha);
+            arp_cache_insert(spa, msg->sha);
             mutex_unlock(&mutex);
         }
 
-        arp_reply(iface, (uint8_t *)msg->sha, *(ip_addr_t *)msg->spa, msg->sha);
+        arp_reply(iface, (uint8_t *)msg->sha, spa, msg->sha);
     }
 }
 
