@@ -74,7 +74,7 @@ int eth_tx_helper(struct net_dev *dev, uint16_t type, const uint8_t *data,
 
     size_t pad = 0;
     if (len < ETH_PAYLOAD_SIZE_MIN)
-        pad = ETH_FRAME_SIZE_MIN - len;
+        pad = ETH_PAYLOAD_SIZE_MIN - len;
 
     size_t flen = sizeof(struct eth_hdr) + len + pad;
 
