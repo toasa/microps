@@ -203,10 +203,6 @@ static void arp_input(const uint8_t *data, size_t len, struct net_dev *dev) {
     debugf("dev=%s, len=%zu", dev->name, len);
     arp_dump(data, len);
 
-    if (ntoh16(hdr.op) != ARP_OP_REQUEST)
-        // Do nothing except arp request.
-        return;
-
     ip_addr_t tpa;
     memcpy(&tpa, msg->tpa, sizeof(tpa));
 
