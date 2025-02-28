@@ -40,6 +40,10 @@ extern const ip_addr_t IP_ADDR_BROADCAST;
 extern int ip_addr_pton(const char *src, ip_addr_t *dst);
 extern char *ip_addr_ntop(ip_addr_t src, char *dst, size_t size);
 
+extern int ip_route_set_default_gateway(struct ip_iface *iface,
+                                        const char *gateway);
+extern struct ip_iface *ip_route_get_iface(ip_addr_t dst);
+
 extern struct ip_iface *ip_iface_alloc(const char *addr, const char *netmask);
 extern int ip_iface_register(struct net_dev *dev, struct ip_iface *iface);
 extern struct ip_iface *ip_iface_select(ip_addr_t addr);
