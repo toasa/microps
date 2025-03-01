@@ -17,6 +17,8 @@
 #define IP_ADDR_LEN 4
 #define IP_ADDR_STR_LEN 16 /* "ddd.ddd.ddd.ddd\0" */
 
+#define IP_ENDPOINT_STR_LEN (IP_ADDR_STR_LEN + 6) // "xxx.xxx.xxx.xxx.:yyyyy\0"
+
 // See https://www.iana.org/assignments/protocol-numbers/protocol-numbers.txt
 #define IP_PROTO_ICMP 1
 #define IP_PROTO_TCP  6
@@ -25,6 +27,11 @@
 #define IP_IFACE(x) ((struct ip_iface *)(x))
 
 typedef uint32_t ip_addr_t;
+
+struct ip_endpoint {
+    ip_addr_t addr;
+    uint16_t port;
+};
 
 struct ip_iface {
     struct net_iface iface;
@@ -39,6 +46,9 @@ extern const ip_addr_t IP_ADDR_BROADCAST;
 
 extern int ip_addr_pton(const char *src, ip_addr_t *dst);
 extern char *ip_addr_ntop(ip_addr_t src, char *dst, size_t size);
+extern int ip_endpoint_pton(const char *src, struct ip_endpoint *dst);
+extern char *ip_endpoint_ntop(const struct ip_endpoint *src, char *dst,
+                              size_t size);
 
 extern int ip_route_set_default_gateway(struct ip_iface *iface,
                                         const char *gateway);

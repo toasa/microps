@@ -78,6 +78,33 @@ char *ip_addr_ntop(ip_addr_t src, char *dst, size_t size) {
     return dst;
 }
 
+int ip_endpoint_pton(const char *src, struct ip_endpoint *dst) {
+    char *sep = strrchr(src, ':');
+    if (!sep)
+        return -1;
+
+    char addr[IP_ADDR_STR_LEN] = {};
+    memcpy(addr, src, sep - src);
+
+    if (ip_addr_pton(addr, &dst->addr) == -1)
+        return -1;
+
+    long port = strtol(sep + 1, NULL, 10);
+    if (port <= 0 || port > UINT16_MAX)
+        return -1;
+
+    dst->port = hton16(port);
+
+    return 0;
+}
+
+char *ip_endpoint_ntop(const struct ip_endpoint *src, char *dst, size_t size) {
+    ip_addr_ntop(src->addr, dst, size);
+    size_t offset = strlen(dst);
+    snprintf(dst + offset, size - offset, ":%d", ntoh16(src->port));
+    return dst;
+}
+
 static void ip_dump(const uint8_t *data, size_t len) {
     flockfile(stderr);
 
