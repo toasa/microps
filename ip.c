@@ -283,7 +283,8 @@ static void ip_input(const uint8_t *data, size_t len, struct net_dev *dev) {
         errorf("too short IP total length");
         return;
     }
-    if (cksum16((uint16_t *)data, len, 0)) {
+    // チェックサムの計算対象は IP ヘッダのみ（IP ペイロードは含まない）
+    if (cksum16((uint16_t *)data, hdr_len, 0)) {
         errorf("invalid check sum");
         return;
     }
