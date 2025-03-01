@@ -284,7 +284,7 @@ static void ip_input(const uint8_t *data, size_t len, struct net_dev *dev) {
         return;
     }
     // チェックサムの計算対象は IP ヘッダのみ（IP ペイロードは含まない）
-    if (cksum16((uint16_t *)data, hdr_len, 0)) {
+    if (cksum16((uint16_t *)hdr, hdr_len, 0)) {
         errorf("invalid check sum");
         return;
     }
@@ -355,7 +355,7 @@ static ssize_t ip_output_core(struct ip_iface *iface, uint8_t proto,
     hdr->chksum = 0; /* Set 0 to calculate check sum. */
     hdr->src = src;
     hdr->dst = dst;
-    hdr->chksum = cksum16((uint16_t *)buf, hlen, 0);
+    hdr->chksum = cksum16((uint16_t *)hdr, hlen, 0);
 
     memcpy(buf + hlen, data, len);
 
