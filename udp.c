@@ -77,12 +77,10 @@ static void udp_pcb_release(struct udp_pcb *pcb) {
     pcb->state = UDP_PCB_STATE_FREE;
     pcb->local.addr = IP_ADDR_ANY;
     pcb->local.port = 0;
-    while (1) {
-        struct queue_entry *e = queue_pop(&pcb->recv_q);
-        if (!e)
-            break;
+
+    struct queue_entry *e;
+    while ((e = queue_pop(&pcb->recv_q)))
         mem_free(e);
-    }
 }
 
 static struct udp_pcb *udp_pcb_select(ip_addr_t addr, uint16_t port) {
