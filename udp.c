@@ -62,6 +62,14 @@ static void udp_input(const uint8_t *data, size_t len, ip_addr_t src,
         errorf("checksum error");
         return;
     }
+
+    char addr1[IP_ADDR_STR_LEN];
+    char addr2[IP_ADDR_STR_LEN];
+    debugf("%s:%d => %s:%d, len=%zu (payload=%zu)",
+           ip_addr_ntop(src, addr1, sizeof(addr1)), ntoh16(hdr->src),
+           ip_addr_ntop(dst, addr2, sizeof(addr2)), ntoh16(hdr->dst), len,
+           len - sizeof(struct udp_hdr));
+    udp_dump(data, len);
 }
 
 ssize_t udp_output(struct ip_endpoint *src, struct ip_endpoint *dst,
