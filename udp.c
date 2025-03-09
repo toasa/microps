@@ -162,7 +162,7 @@ static void udp_input(const uint8_t *data, size_t len, ip_addr_t src,
     e->foreign.addr = src;
     e->foreign.port = hdr->dst;
     e->len = udp_payload_len;
-    memcpy(e->data, hdr + sizeof(struct udp_hdr), udp_payload_len);
+    memcpy(e->data, hdr + 1, udp_payload_len);
     queue_push(&pcb->recv_q, e);
     debugf("queue pushed: id=%d, num=%d", udp_pcb_id(pcb), pcb->recv_q.len);
     mutex_unlock(&mutex);
@@ -193,7 +193,7 @@ ssize_t udp_output(struct ip_endpoint *src, struct ip_endpoint *dst,
     hdr->src = src->port;
     hdr->dst = dst->port;
     hdr->len = hton16(udp_datagram_len);
-    memcpy(buf + sizeof(struct udp_hdr), data, len);
+    memcpy(hdr + 1, data, len);
 
     // Calculate remaining checksum (for UDP header and datagram).
     hdr->chksum = cksum16((uint16_t *)hdr, udp_datagram_len, cksum);
