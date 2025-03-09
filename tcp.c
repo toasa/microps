@@ -54,8 +54,8 @@ static void tcp_dump(const uint8_t *data, size_t len) {
     flockfile(stderr);
     fprintf(stderr, "        src: %u\n", ntoh16(hdr->src));
     fprintf(stderr, "        dst: %u\n", ntoh16(hdr->dst));
-    fprintf(stderr, "      seqno: %u\n", ntoh16(hdr->seqno));
-    fprintf(stderr, "      ackno: %u\n", ntoh16(hdr->ackno));
+    fprintf(stderr, "      seqno: %u\n", ntoh32(hdr->seqno));
+    fprintf(stderr, "      ackno: %u\n", ntoh32(hdr->ackno));
     fprintf(stderr, "        off: 0x%02x (%d)\n", hdr->off,
             (hdr->off >> 4) << 2);
     fprintf(stderr, "       flag: 0x%02x (%s)\n", hdr->flag,
