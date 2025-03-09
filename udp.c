@@ -160,7 +160,7 @@ static void udp_input(const uint8_t *data, size_t len, ip_addr_t src,
         return;
     }
     e->foreign.addr = src;
-    e->foreign.port = hdr->dst;
+    e->foreign.port = hdr->src;
     e->len = udp_payload_len;
     memcpy(e->data, hdr + 1, udp_payload_len);
     queue_push(&pcb->recv_q, e);
