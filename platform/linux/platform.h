@@ -9,13 +9,9 @@
  * Memory
  */
 
-static inline void *mem_alloc(size_t size) {
-    return calloc(1, size);
-}
+static inline void *mem_alloc(size_t size) { return calloc(1, size); }
 
-static inline void mem_free(void *ptr) {
-    free(ptr);
-}
+static inline void mem_free(void *ptr) { free(ptr); }
 
 /*
  * Mutex
@@ -43,8 +39,9 @@ static inline int mutex_unlock(mutex_t *mutex) {
 
 // Linux では SIGRTMIN~SIGRTMAX (34~64) のシグナルを、アプリが自由に使っていい。
 // SIGRTMIN は glibc が内部的に使用しているため、+1 から使う。
-#define INTR_IRQ_BASE (SIGRTMIN+1)
+#define INTR_IRQ_BASE (SIGRTMIN + 1)
 #define INTR_IRQ_SOFTIRQ SIGUSR1
+#define INTR_IRQ_EVENT SIGUSR2
 
 #define INTR_IRQ_SHARED 0x0001
 
@@ -56,5 +53,24 @@ extern int intr_raise_irq(unsigned int irq);
 extern int intr_run(void);
 extern void intr_shutdown(void);
 extern int intr_init(void);
+
+/*
+ * Scheduler
+ */
+
+struct sched_ctx {
+    pthread_cond_t cond;
+    int interrupted;
+    int wait_count;
+};
+
+#define SCHED_CTX_INITIALIZER {PTHREAD_COND_INITIALIZER, 0, 0}
+
+extern int sched_ctx_init(struct sched_ctx *ctx);
+extern int sched_ctx_destroy(struct sched_ctx *ctx);
+extern int sched_sleep(struct sched_ctx *ctx, mutex_t *mutx,
+                       const struct timespec *abstime);
+extern int sched_wakeup(struct sched_ctx *ctx);
+extern int sched_interrupt(struct sched_ctx *ctx);
 
 #endif

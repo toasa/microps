@@ -60,9 +60,7 @@ int intr_register_irq(unsigned int irq, irq_handler_t handler, int flags,
     return 0;
 }
 
-int intr_raise_irq(unsigned int irq) {
-    return pthread_kill(tid, (int)irq);
-}
+int intr_raise_irq(unsigned int irq) { return pthread_kill(tid, (int)irq); }
 
 static int intr_timer_setup(struct itimerspec *interval) {
     timer_t id;
@@ -105,6 +103,9 @@ static void *intr_thread(void *arg) {
             break;
         case SIGUSR1:
             net_softirq_handler();
+            break;
+        case SIGUSR2:
+            net_event_handler();
             break;
         case SIGALRM:
             net_timer_handler();
@@ -158,6 +159,7 @@ int intr_init(void) {
     sigemptyset(&sigmask);
     sigaddset(&sigmask, SIGHUP);
     sigaddset(&sigmask, SIGUSR1);
+    sigaddset(&sigmask, SIGUSR2);
     sigaddset(&sigmask, SIGALRM);
 
     return 0;

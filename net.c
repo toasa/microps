@@ -29,11 +29,18 @@ struct net_timer {
     void (*handler)(void);
 };
 
+struct net_event {
+    struct net_event *next;
+    void (*handler)(void *arg);
+    void *arg;
+};
+
 // NOTE: If you want to add/delete the entries after net_run(),
 // you need to protect these lists with a mutex.
 static struct net_dev *devs;
 static struct net_proto *protos;
 static struct net_timer *timers;
+static struct net_event *events;
 
 struct net_dev *net_dev_alloc(void) {
     struct net_dev *dev = mem_alloc(sizeof(struct net_dev));
@@ -264,6 +271,31 @@ int net_softirq_handler(void) {
 
     return 0;
 }
+
+// NOTE: Must not be call after net_run().
+int net_event_subscribe(void (*handler)(void *arg), void *arg) {
+    struct net_event *e = mem_alloc(sizeof(struct net_event));
+    if (!e) {
+        errorf("mem_alloc() failure");
+        return -1;
+    }
+
+    e->handler = handler;
+    e->arg = arg;
+    e->next = events;
+    events = e;
+
+    return 0;
+}
+
+int net_event_handler(void) {
+    for (struct net_event *e = events; e; e = e->next)
+        e->handler(e->arg);
+
+    return 0;
+}
+
+void net_raise_event(void) { intr_raise_irq(INTR_IRQ_EVENT); }
 
 int net_run(void) {
     if (intr_run() == -1) {
