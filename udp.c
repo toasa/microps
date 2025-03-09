@@ -159,7 +159,7 @@ static void udp_input(const uint8_t *data, size_t len, ip_addr_t src,
         errorf("mem_alloc() failure");
         return;
     }
-    e->foreign.addr = dst;
+    e->foreign.addr = src;
     e->foreign.port = hdr->dst;
     e->len = udp_payload_len;
     memcpy(e->data, hdr + sizeof(struct udp_hdr), udp_payload_len);
